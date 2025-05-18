@@ -1,11 +1,11 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { baseUrl } from "../../../constants/env.constants";
 import Loader from "../../../ConstData/Loader";
-import axios from "axios";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Flower_Details = () => {
   const location = useLocation();
@@ -206,7 +206,7 @@ const Flower_Details = () => {
 
       // Proceed with payment
       const { data: paymentData } = await axios.get(
-        `${baseUrl}/payments/payment_detail/${id}/`,
+        `${baseUrl}/payment/payment_detail/${id}/`,
         {
           headers: {
             Authorization: `token ${token}`,

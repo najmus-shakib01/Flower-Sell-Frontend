@@ -78,7 +78,7 @@ const Add_Flower = () => {
         <div className="w-full md:w-1/2">
           <img
             className="object-cover rounded-lg w-full"
-            src="./image/add.png"
+            src="/add.png"
             alt="Add Image"
           />
         </div>

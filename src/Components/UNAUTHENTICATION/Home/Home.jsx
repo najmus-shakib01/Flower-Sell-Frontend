@@ -3,6 +3,7 @@ import { baseUrl } from "../../../constants/env.constants";
 import Loader from "../../../ConstData/Loader";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useEffect, useState } from "react";
 
 const fetchFlowers = async () => {
   try {
@@ -15,29 +16,28 @@ const fetchFlowers = async () => {
 };
 
 const Home = () => {
-  const slides = [
-    {
-      id: "slide1",
-      src: "/demp.png",
-      alt: "slide-img-1",
-      next: "slide2",
-      prev: "slide3",
-    },
-    {
-      id: "slide2",
-      src: "/calimg11.png",
-      alt: "slide-img-2",
-      next: "slide3",
-      prev: "slide1",
-    },
-    {
-      id: "slide3",
-      src: "/calimg5.png",
-      alt: "slide-img-3",
-      next: "slide1",
-      prev: "slide2",
-    },
-  ];
+  const images = ["/demp.png", "/calimg5.png", "/calimg11.png"];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      goToNextSlide();
+    }, 4000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex]);
+
+  const goToPreviousSlide = () => {
+    const isFirstSlide = currentIndex === 0;
+    setCurrentIndex(isFirstSlide ? images.length - 1 : currentIndex - 1);
+  };
+
+  const goToNextSlide = () => {
+    const isLastSlide = currentIndex === images.length - 1;
+    setCurrentIndex(isLastSlide ? 0 : currentIndex + 1);
+  };
+
   // Seasonal Flowers Data
   const seasonal_flowers = [
     {
@@ -104,29 +104,46 @@ const Home = () => {
       </Helmet>
       <div className="container mx-auto max-w-screen-xl px-6 py-3">
         {/* Slide Section */}
-        <section>
-          <div className="carousel w-full rounded-lg shadow-xl overflow-hidden mt-24">
-            {slides.map((slide) => (
-              <div
-                key={slide.id}
-                id={slide.id}
-                className="carousel-item relative w-full"
+        <section className="mt-24">
+          <div className="w-full max-w-7xl mx-auto relative mt-8">
+            <div className="overflow-hidden rounded-2xl shadow-lg">
+              <img
+                src={images[currentIndex]}
+                alt="Slide"
+                className="w-full h-96 transition duration-500"
+              />
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="absolute top-1/2 left-0 transform -translate-y-1/2">
+              <button
+                onClick={goToPreviousSlide}
+                className="bg-black bg-opacity-50 text-white px-3 py-2 rounded-r hover:bg-opacity-75"
               >
-                <img
-                  src={slide.src}
-                  alt={slide.alt}
-                  className="w-full h-[400px] mobile-device-slide-img"
-                />
-                <div className="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between">
-                  <a href={`#${slide.prev}`} className="btn btn-circle">
-                    ❮
-                  </a>
-                  <a href={`#${slide.next}`} className="btn btn-circle">
-                    ❯
-                  </a>
-                </div>
-              </div>
-            ))}
+                ❮
+              </button>
+            </div>
+            <div className="absolute top-1/2 right-0 transform -translate-y-1/2">
+              <button
+                onClick={goToNextSlide}
+                className="bg-black bg-opacity-50 text-white px-3 py-2 rounded-l hover:bg-opacity-75"
+              >
+                ❯
+              </button>
+            </div>
+
+            {/* Dots */}
+            <div className="flex justify-center mt-4">
+              {images.map((_, index) => (
+                <div
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`w-3 h-3 mx-1 rounded-full cursor-pointer ${
+                    currentIndex === index ? "bg-blue-500" : "bg-gray-300"
+                  }`}
+                ></div>
+              ))}
+            </div>
           </div>
         </section>
         {/* Seasonal Flowers Section */}
