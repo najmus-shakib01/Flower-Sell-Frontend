@@ -211,18 +211,6 @@ const Navbar = () => {
                           Users Show
                         </Link>
                       </li>
-                      <li>
-                        <Link
-                          to={"/visitor-counter"}
-                          className="block py-2 px-4 hover:bg-gray-200 rounded"
-                          onClick={() => {
-                            setIsOpen(false);
-                            setShowAdminDropdown(false);
-                          }}
-                        >
-                          Visitor Counter
-                        </Link>
-                      </li>
                     </ul>
                   )}
                 </li>

@@ -1,9 +1,9 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { Trash } from "lucide-react";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import Loader from "../../../ConstData/Loader";
 import Time from "../../../ConstData/Time";
 import { baseUrl } from "../../../constants/env.constants";
@@ -156,18 +156,20 @@ const Cart = () => {
                       <strong>৳</strong>
                       {item.flower_price}
                     </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      {showFullDescription[item.id]
-                        ? item.flower_description
-                        : `${item.flower_description.slice(0, 20)}...`}
-                      <button
-                        onClick={() => toggleDescription(item.id)}
-                        className="text-blue-400 underline"
-                      >
+                    <td className="px-2 py-3">
+                      <div className="max-w-xs">
                         {showFullDescription[item.id]
-                          ? " See Less"
-                          : " See All"}
-                      </button>
+                          ? item.flower_description
+                          : `${item.flower_description.slice(0, 20)}...`}
+                        <button
+                          onClick={() => toggleDescription(item.id)}
+                          className="text-blue-400 underline ml-1"
+                        >
+                          {showFullDescription[item.id]
+                            ? " See Less"
+                            : " See All"}
+                        </button>
+                      </div>
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap">
                       {item.flower_stock}
@@ -198,7 +200,7 @@ const Cart = () => {
       </div>
 
       <dialog id="confirmDeleteModal" className="modal">
-        <div className="modal-box">
+        <div className="modal-box bg-white">
           <h3 className="font-bold text-lg">Are you sure?</h3>
           <p className="py-4">
             Do you really want to remove this item from the cart?
