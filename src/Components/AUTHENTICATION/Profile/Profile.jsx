@@ -1,4 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
@@ -7,7 +8,22 @@ import Loader from "../../../ConstData/Loader";
 
 const Profile = () => {
   const userId = localStorage.getItem("userId");
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const { data: profileData, isLoading } = useQuery({
+    queryKey: ["profile", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const response = await axios.get(
+        `${baseUrl}/user/user_detail/${userId}/`
+      );
+      return response.data;
+    },
+    onError: () => {
+      toast.error("Failed to fetch profile data");
+    },
+  });
+
   const [profile, setProfile] = useState({
     username: "",
     first_name: "",
@@ -16,32 +32,49 @@ const Profile = () => {
     profile_img: "",
   });
 
-  const fetchProfile = () => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    fetch(`${baseUrl}/user/user_detail/${userId}/`)
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Fetched Profile Data (After Update):", data);
-        if (data && typeof data === "object") {
-          setProfile({
-            ...data,
-            profile_img: data.profile_img || "",
-          });
-        } else {
-          toast.error("User not found!");
-        }
-      })
-      .catch(() => toast.error("Failed to fetch profile data"))
-      .finally(() => setLoading(false));
-  };
-
   useEffect(() => {
-    fetchProfile();
-  }, [userId]);
+    if (profileData) {
+      setProfile({
+        username: profileData.username || "",
+        first_name: profileData.first_name || "",
+        last_name: profileData.last_name || "",
+        email: profileData.email || "",
+        profile_img: profileData.profile_img || "",
+      });
+    }
+  }, [profileData]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updatedProfile) => {
+      const token = localStorage.getItem("auth_token");
+      const response = await axios.put(
+        `${baseUrl}/user/user_detail/${userId}/`,
+        {
+          username: updatedProfile.username,
+          first_name: updatedProfile.first_name,
+          last_name: updatedProfile.last_name,
+          email: updatedProfile.email,
+          profile: {
+            profile_img: updatedProfile.profile_img,
+          },
+        },
+        {
+          headers: {
+            Authorization: `token ${token}`,
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Profile updated successfully!");
+      queryClient.invalidateQueries(["profile", userId]);
+    },
+    onError: (error) => {
+      console.error("Error updating profile:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile!");
+    },
+  });
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -49,41 +82,7 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const updatedProfile = {
-      username: profile.username,
-      first_name: profile.first_name,
-      last_name: profile.last_name,
-      email: profile.email,
-      profile: {
-        profile_img: profile.profile_img,
-      },
-    };
-
-    const token = localStorage.getItem("auth_token");
-
-    try {
-      const response = await fetch(`${baseUrl}/user/user_detail/${userId}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `token ${token}`,
-        },
-        body: JSON.stringify(updatedProfile),
-      });
-
-      if (response.ok) {
-        toast.success("Profile updated successfully!");
-        fetchProfile();
-      } else {
-        const errorData = await response.json();
-        console.error("Error updating profile:", errorData);
-        toast.error(errorData.message || "Failed to update profile!");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Something went wrong!");
-    }
+    updateProfileMutation.mutate(profile);
   };
 
   return (
@@ -92,7 +91,7 @@ const Profile = () => {
         <Helmet>
           <title>Profile</title>
         </Helmet>
-        {loading ? (
+        {isLoading ? (
           <Loader />
         ) : (
           <div>
@@ -160,8 +159,14 @@ const Profile = () => {
                       required
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary w-full">
-                    Update Profile
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-full"
+                    disabled={updateProfileMutation.isLoading}
+                  >
+                    {updateProfileMutation.isLoading
+                      ? "Updating..."
+                      : "Update Profile"}
                   </button>
                 </form>
               </div>

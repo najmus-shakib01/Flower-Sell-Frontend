@@ -123,7 +123,7 @@ const Login = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-md font-bold"
+                  className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition"
                 >
                   Login
                 </button>

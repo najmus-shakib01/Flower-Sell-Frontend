@@ -131,7 +131,7 @@ const Register = () => {
             />
           </div>
           <div className="w-full md:w-1/2 p-6 bg-white rounded-xl shadow-lg">
-            <Link className="btn btn-info w-full" to={"/hr_login"}>
+            <Link className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition" to={"/hr_login"}>
               HR LOGIN
             </Link>
             <br />
@@ -204,7 +204,7 @@ const Register = () => {
               />
               <button
                 type="submit"
-                className="btn btn-accent w-full"
+                className="w-1/2 bg-blue-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-blue-700 transition"
                 disabled={loading}
               >
                 {loading ? "Loading..." : "Register"}

@@ -333,7 +333,7 @@ const Flower_Details = () => {
                 disabled={addCommentMutation.isPending}
               ></textarea>
               <button
-                className="btn btn-success mt-2"
+                className="w-1/2 bg-green-600 text-white py-2 px-2 rounded-lg font-bold hover:bg-green-700 transition mt-2"
                 onClick={handleCommentSubmit}
                 disabled={addCommentMutation.isPending}
               >
@@ -356,7 +356,7 @@ const Flower_Details = () => {
                 />
                 <div className="modal-action">
                   <button
-                    className="btn btn-primary"
+                    className="w-1/2 bg-blue-600 text-white py-2 px-3 rounded-lg font-bold hover:bg-blue-700 transitiony"
                     onClick={handleOrder}
                     disabled={createOrderMutation.isPending}
                   >
@@ -414,7 +414,7 @@ const Flower_Details = () => {
               {comment.user === loggedInUser && (
                 <div className="flex gap-3 mt-3">
                   <button
-                    className="btn btn-sm btn-accent"
+                    className="w-1/2 bg-blue-600 text-white py-2 px-3 rounded-lg font-bold hover:bg-blue-700 transition"
                     onClick={() => {
                       setEditingComment(comment.id);
                       setEditCommentText(comment.body);
@@ -426,7 +426,7 @@ const Flower_Details = () => {
                   </button>
 
                   <button
-                    className="btn btn-sm btn-error"
+                    className="w-1/2 bg-red-600 text-white py-2 px-3 rounded-lg font-bold hover:bg-red-700 transition"
                     onClick={() => handleDeleteComment(comment.id)}
                     disabled={deleteCommentMutation.isPending}
                   >
@@ -451,7 +451,7 @@ const Flower_Details = () => {
           ></textarea>
           <div className="modal-action">
             <button
-              className="btn btn-primary"
+              className="w-1/2 bg-green-600 text-white py-2 px-3 rounded-lg font-bold hover:bg-green-700 transition"
               onClick={() => handleEditComment(editingComment)}
               disabled={editCommentMutation.isPending}
             >
