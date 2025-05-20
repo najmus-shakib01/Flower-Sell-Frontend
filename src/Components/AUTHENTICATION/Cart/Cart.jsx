@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import Loader from "../../../ConstData/Loader";
 import Time from "../../../ConstData/Time";
 import { baseUrl } from "../../../constants/env.constants";
+import { Link } from "react-router-dom";
 
 const Cart = () => {
   const token = localStorage.getItem("auth_token");
@@ -141,7 +142,14 @@ const Cart = () => {
               <tbody>
                 {items.map((item, index) => (
                   <tr key={item.id} className="border-t">
-                    <td className="px-2 py-3 whitespace-nowrap">{index + 1}</td>
+                    <td>
+                      <Link
+                        className="px-2 py-3 whitespace-nowrap text-blue-700 font-bold"
+                        to={`/flower_details/?flower_id=${item.id}`}
+                      >
+                        {index + 1}
+                      </Link>
+                    </td>
                     <td className="px-2 py-3 whitespace-nowrap">
                       <img
                         src={item.flower_image}

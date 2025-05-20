@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { baseUrl } from "../constants/env.constants";
+import { useQuery } from "@tanstack/react-query";
+import fetchCartItems from "../Components/AUTHENTICATION/Cart/Cart";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -80,6 +82,15 @@ const Navbar = () => {
     }
   };
 
+  // clart items count
+  const { data: cartItems } = useQuery({
+    queryKey: ["cart"],
+    queryFn: () => fetchCartItems(token),
+    enabled: !!token,
+  });
+
+  const items = Array.isArray(cartItems) ? cartItems : cartItems?.data || [];
+
   return (
     <nav className="bg-white shadow-md fixed top-0 left-0 w-full z-50">
       <div className="max-w-screen-xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -136,13 +147,18 @@ const Navbar = () => {
                   <b>Order History</b>
                 </Link>
               </li>
-              <li className="w-full">
+              <li className="w-full relative">
                 <Link
                   to={"/cart"}
-                  className="hover:text-primary block py-2 items-center"
+                  className="hover:text-primary block py-2 items-center relative"
                   onClick={() => setIsOpen(false)}
                 >
                   <ShoppingCart className="mr-2" />
+                  {items.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center z-10">
+                      {items.length}
+                    </span>
+                  )}
                 </Link>
               </li>
 
