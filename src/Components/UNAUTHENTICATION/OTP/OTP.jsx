@@ -79,9 +79,6 @@ const OTP = () => {
       toast.error("Something went wrong! Please try again.", error);
     }
   };
-  const handlePasteOtp = (otpArray) => {
-    setOtp(otpArray);
-  };
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-10 pt-28 container">
@@ -121,14 +118,6 @@ const OTP = () => {
                     maxLength="1"
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pastedData = e.clipboardData.getData("text/plain");
-                      const otpArray = pastedData
-                        .split("")
-                        .slice(0, otp.length);
-                      handlePasteOtp(otpArray);
-                    }}
                   />
                 ))}
               </div>
