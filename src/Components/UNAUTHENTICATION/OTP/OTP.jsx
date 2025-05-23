@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ const OTP = () => {
   const [timer, setTimer] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const otpInputRefs = useRef([]);
 
   useEffect(() => {
     let interval;
@@ -30,6 +31,31 @@ const OTP = () => {
       const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
+
+      // Auto focus to next input
+      if (value && index < 5) {
+        otpInputRefs.current[index + 1].focus();
+      }
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text/plain').trim();
+    if (/^\d{6}$/.test(pasteData)) {
+      const pasteArray = pasteData.split('');
+      const newOtp = [...otp];
+      for (let i = 0; i < 6; i++) {
+        if (pasteArray[i]) {
+          newOtp[i] = pasteArray[i];
+        }
+      }
+      setOtp(newOtp);
+      
+      // Focus on the last input after paste
+      if (otpInputRefs.current[5]) {
+        otpInputRefs.current[5].focus();
+      }
     }
   };
 
@@ -81,19 +107,19 @@ const OTP = () => {
   };
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-10 pt-28 container">
+    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 pt-20 md:pt-28 container">
       <Helmet>
         <title>OTP</title>
       </Helmet>
-      <div className="w-full md:w-1/2">
+      <div className="w-full md:w-1/2 hidden md:block">
         <img
           className="w-full rounded-lg shadow-lg"
           src="/otp.png"
           alt="Register Image"
         />
       </div>
-      <div className="flex flex-col gap-6 w-full md:w-1/2">
-        <div className="p-6 bg-white shadow-lg rounded-lg w-full">
+      <div className="flex flex-col gap-4 md:gap-6 w-full md:w-1/2">
+        <div className="p-4 sm:p-6 bg-white shadow-lg rounded-lg w-full">
           <form id="otp-form" className="space-y-4" onSubmit={handleVerifyOTP}>
             <label htmlFor="email" className="font-bold">
               Email
@@ -101,7 +127,7 @@ const OTP = () => {
             <input
               type="email"
               id="email"
-              className="input focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 w-full"
+              className="input focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 w-full p-2 rounded"
               placeholder="Enter Your Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -109,29 +135,36 @@ const OTP = () => {
             />
             <div>
               <label className="font-bold">OTP Code</label>
-              <div className="flex w-full justify-between">
+              <div className="flex w-full justify-between gap-1 sm:gap-4">
                 {otp.map((digit, index) => (
                   <input
                     key={index}
+                    ref={(el) => (otpInputRefs.current[index] = el)}
                     type="text"
-                    className="input focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 w-20"
+                    className="input focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 w-12 h-12 sm:w-16 sm:h-16 text-center text-xl rounded"
                     maxLength="1"
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onPaste={index === 0 ? handleOtpPaste : null}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                   />
                 ))}
               </div>
+              <p className="text-sm text-gray-500 mt-2">
+                Tip: You can paste the 6-digit OTP code
+              </p>
             </div>
             <button
               type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg w-full md:w-1/3"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg w-full md:w-1/3 transition-colors"
               disabled={loading}
             >
               {loading ? "Loading..." : "Verify OTP"}
             </button>
           </form>
         </div>
-        <div className="p-6 bg-white shadow-lg rounded-lg w-full">
+        <div className="p-4 sm:p-6 bg-white shadow-lg rounded-lg w-full">
           <form
             id="otp-resend-form"
             className="space-y-4"
@@ -143,7 +176,7 @@ const OTP = () => {
             <input
               type="email"
               id="email_resend"
-              className="input focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 w-full"
+              className="input focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 w-full p-2 rounded"
               placeholder="Enter Your Email"
               value={emailResend}
               onChange={(e) => setEmailResend(e.target.value)}
@@ -151,7 +184,7 @@ const OTP = () => {
             />
             <button
               type="submit"
-              className="bg-green-500 text-white px-4 py-2 rounded-lg w-full md:w-1/3"
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg w-full md:w-1/3 transition-colors"
               disabled={resendDisabled}
             >
               {resendDisabled ? `Resend OTP (${timer}s)` : "Resend OTP"}
