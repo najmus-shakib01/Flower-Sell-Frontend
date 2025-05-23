@@ -354,46 +354,49 @@ const Auth_Home = () => {
                 {careTips.map((tip) => (
                   <div
                     key={tip.id}
-                    className="bg-white shadow-lg rounded-lg p-6 border border-gray-200"
+                    className="bg-white shadow-lg rounded-lg p-6 borde border-gray-200"
                   >
-                    <h3 className="text-xl font-semibold text-primary">
-                      🌿 {tip.plant_name}
-                    </h3>
-                    <p>
-                      <b>Symptoms : </b> {tip.symptoms}
-                    </p>
-                    <p>
-                      <b>Revival Steps : </b> {tip.revival_steps}
-                    </p>
-                    <p>
-                      <b>Recommended Fertilizer : </b>{" "}
-                      {tip.recommended_fertilizer}
-                    </p>
-                    <p>
-                      <b>Watering Caution : </b> {tip.watering_caution}
-                    </p>
-                    <p>
-                      <b>Sunlight Adjustment : </b> {tip.sunlight_adjustment}
-                    </p>
-                    <p>
-                      <b>Sunlight Needs : </b> {tip.sunlight_needs}
-                    </p>
-                    <p>
-                      <b>Recommended Water Frequency : </b>{" "}
-                      {tip.recommended_water_frequency}
-                    </p>
-                    <p>
-                      <b>Created At : </b>{" "}
-                      {new Date(tip.created_at).toLocaleDateString()}
-                    </p>
-                    <p>
-                      <b>Updated At : </b>{" "}
-                      {new Date(tip.updated_at).toLocaleDateString()}
-                    </p>
-                    <p className="text-gray-500 italic">
-                      <b>Special Notes : </b>{" "}
-                      {tip.special_notes || "No special notes"}
-                    </p>
+                    <div className="whitespace-pre-line break-words leading-9 text-justify">
+                      <h3 className="text-xl font-semibold text-primary">
+                        🌿 {tip.plant_name}
+                      </h3>
+                      <p>
+                        <b>Symptoms : </b> {tip.symptoms}
+                      </p>
+                        <b>Revival Steps : </b> 
+                      <p>
+                        {tip.revival_steps}
+                      </p>
+                      <p>
+                        <b>Recommended Fertilizer : </b>{" "}
+                        {tip.recommended_fertilizer}
+                      </p>
+                      <p>
+                        <b>Watering Caution : </b> {tip.watering_caution}
+                      </p>
+                      <p>
+                        <b>Sunlight Adjustment : </b> {tip.sunlight_adjustment}
+                      </p>
+                      <p>
+                        <b>Sunlight Needs : </b> {tip.sunlight_needs}
+                      </p>
+                      <p>
+                        <b>Recommended Water Frequency : </b>{" "}
+                        {tip.recommended_water_frequency}
+                      </p>
+                      <p>
+                        <b>Created At : </b>{" "}
+                        {new Date(tip.created_at).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <b>Updated At : </b>{" "}
+                        {new Date(tip.updated_at).toLocaleDateString()}
+                      </p>
+                      <p className="text-gray-500 italic">
+                        <b>Special Notes : </b>{" "}
+                        {tip.special_notes || "No special notes"}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>

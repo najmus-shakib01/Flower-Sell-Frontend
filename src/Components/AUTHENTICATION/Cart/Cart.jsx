@@ -94,13 +94,13 @@ const Cart = () => {
   if (isLoading) {
     return <Loader />;
   }
-
+  
   if (isError) {
     return <p className="text-center text-red-500">Error loading cart data.</p>;
   }
-
+  
   const items = Array.isArray(cartItems) ? cartItems : cartItems?.data || [];
-
+  
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-3 container pt-28">
       <Helmet>
@@ -141,15 +141,9 @@ const Cart = () => {
               </thead>
               <tbody>
                 {items.map((item, index) => (
+                  console.log(item),
                   <tr key={item.id} className="border-t">
-                    <td>
-                      <Link
-                        className="px-2 py-3 whitespace-nowrap text-blue-700 font-bold"
-                        to={`/flower_details/?flower_id=${item.id}`}
-                      >
-                        {index + 1}
-                      </Link>
-                    </td>
+                    <td className="px-2 py-3">{index + 1}</td>
                     <td className="px-2 py-3 whitespace-nowrap">
                       <img
                         src={item.flower_image}
@@ -157,8 +151,10 @@ const Cart = () => {
                         className="w-16 h-16 sm:w-20 sm:h-20 rounded-md object-cover"
                       />
                     </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      {item.flower}
+                    <td className="px-2 py-3 whitespace-nowrap text-blue-600">
+                      <Link to={`/flower_details/?flower_id=${item.flower_id}`}>
+                        {item.flower_name}
+                      </Link>
                     </td>
                     <td className="px-2 py-3 whitespace-nowrap">
                       <strong>৳</strong>
