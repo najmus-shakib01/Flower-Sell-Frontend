@@ -44,7 +44,12 @@ const OTP = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: enteredOtp }),
       });
+      console.log("Verification payload:", {
+        email: email,
+        otp: enteredOtp,
+      });
       const data = await response.json();
+      console.log(data);
       setLoading(false);
       if (response.ok) {
         toast.success("OTP Verified Successfully!");
@@ -78,6 +83,16 @@ const OTP = () => {
     } catch (error) {
       toast.error("Something went wrong! Please try again.", error);
     }
+  };
+
+  const handlePasteOtp = (digits) => {
+    const newOtp = [...otp];
+    digits.forEach((digit, index) => {
+      if (index < newOtp.length) {
+        newOtp[index] = digit;
+      }
+    });
+    setOtp(newOtp);
   };
 
   return (
@@ -114,10 +129,23 @@ const OTP = () => {
                   <input
                     key={index}
                     type="text"
-                    className="input focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 w-12 h-12 sm:w-16 sm:h-16 text-center text-xl rounded"
+                    className="input focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200 w-12 h-12 sm:w-16 sm:h-16 text-center text-xl rounded 
+                 hover:bg-gray-300 transition-colors duration-200 ease-in-out
+                 focus:bg-white focus:border-blue-500 focus:ring-opacity-50
+                 selection:bg-blue-200 caret-transparent"
                     maxLength="1"
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pastedData = e.clipboardData.getData("text/plain");
+                      if (/^\d+$/.test(pastedData)) {
+                        const pastedDigits = pastedData
+                          .split("")
+                          .slice(0, otp.length);
+                        handlePasteOtp(pastedDigits);
+                      }
+                    }}
                   />
                 ))}
               </div>
