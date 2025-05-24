@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import toast from "react-hot-toast";
@@ -15,6 +16,19 @@ const Register = () => {
       setShowPassword(!showPassword);
     } else {
       setShowConfirmPassword(!showConfirmPassword);
+    }
+  };
+
+  // Email validation function
+  const validateEmail = async (email) => {
+    const accessKey = "00c1c8b0668ea0626e7898daa00a093c";
+    const url = `https://apilayer.net/api/check?access_key=${accessKey}&email=${email}`;
+
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      throw new Error("Email validation failed", error);
     }
   };
 
@@ -43,6 +57,26 @@ const Register = () => {
       return;
     }
 
+    // First validate the email directly without useQuery
+    try {
+      const emailValidation = await validateEmail(email);
+
+      if (
+        !emailValidation.format_valid ||
+        !emailValidation.mx_found ||
+        !emailValidation.smtp_check
+      ) {
+        toast.error("Please provide a valid and deliverable email address");
+        setLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.error("Email validation error:", error);
+      toast.error(
+        "Email validation service unavailable. Proceeding with registration..."
+      );
+    }
+
     try {
       // Upload image to Cloudinary
       const imgData = new FormData();
@@ -50,17 +84,14 @@ const Register = () => {
       imgData.append("upload_preset", "first_time_using_cloudinary");
       imgData.append("cloud_name", "daasda9rp");
 
-      const imgRes = await fetch(
+      const imgRes = await axios.post(
         "https://api.cloudinary.com/v1_1/daasda9rp/image/upload",
-        {
-          method: "POST",
-          body: imgData,
-        }
+        imgData
       );
-      console.log(imgRes);
-      const imgResult = await imgRes.json();
 
-      if (!imgRes.ok || !imgResult.secure_url) {
+      const imgResult = imgRes.data;
+
+      if (imgRes.status !== 200 || !imgResult.secure_url) {
         toast.error("Image upload failed!");
         setLoading(false);
         return;
@@ -73,7 +104,6 @@ const Register = () => {
       }
 
       if (profile_img.size > 5 * 1024 * 1024) {
-        // 5MB max size
         toast.error("Image size should be less than 5MB!");
         setLoading(false);
         return;
@@ -82,35 +112,35 @@ const Register = () => {
       const profileImageUrl = imgResult.secure_url;
 
       // Send data to backend
-      const response = await fetch(`${baseUrl}/user/register/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username,
-          email,
-          first_name,
-          last_name,
-          password,
-          confirm_password,
-          profile_img: profileImageUrl,
-        }),
+      const response = await axios.post(`${baseUrl}/user/register/`, {
+        username,
+        email,
+        first_name,
+        last_name,
+        password,
+        confirm_password,
+        profile_img: profileImageUrl,
       });
 
-      const result = await response.json();
-      if (response.ok) {
+      if (response.status === 200 || response.status === 201) {
         toast.success("Registration Successful! Redirecting to Login...");
         navigate("/otp");
       } else {
         toast.error(
-          result.message ||
-            result.error ||
-            result.detail ||
+          response.data?.message ||
+            response.data?.error ||
+            response.data?.detail ||
             "Registration failed"
         );
       }
     } catch (error) {
       console.error("Registration Error:", error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.response?.data?.detail ||
+          "Something went wrong. Please try again."
+      );
     }
 
     setLoading(false);
@@ -131,7 +161,10 @@ const Register = () => {
             />
           </div>
           <div className="w-full md:w-1/2 p-6 bg-white rounded-xl shadow-lg">
-            <Link className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition" to={"/hr_login"}>
+            <Link
+              className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition"
+              to={"/hr_login"}
+            >
               HR LOGIN
             </Link>
             <br />

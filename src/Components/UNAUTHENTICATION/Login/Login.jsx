@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
@@ -8,6 +9,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const togglePassword = () => {
@@ -21,41 +23,31 @@ const Login = () => {
   const handleLogin = async (event) => {
     event.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      const response = await fetch(`${baseUrl}/user/login/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      console.log("API Response:", data);
-
-      if (response.ok) {
-        if (data.user && data.user.id) {
-          localStorage.setItem("auth_token", data.token);
-          localStorage.setItem("userId", data.user.id);
-          localStorage.setItem("UserName", data.user.username);
-          console.log("User ID Stored:", localStorage.getItem("userId"));
-          console.log(
-            "User UserName Stored:",
-            localStorage.getItem("UserName")
-          );
-        } else {
-          console.error("User ID missing in response!");
-        }
-
-        window.dispatchEvent(new Event("storage"));
-        toast.success("Login Successfully!");
-        navigate(`/profile/${data.user.username}`);
+      const response = await axios.post(`${baseUrl}/user/login/`, formData);
+      const data = response.data;
+      
+      if (data.user && data.user.id) {
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("userId", data.user.id);
+        localStorage.setItem("UserName", data.user.username);
       } else {
-        toast.error(data.detail || "Login failed. Please try again.");
+        console.error("User ID missing in response!");
       }
+
+      window.dispatchEvent(new Event("storage"));
+      toast.success("Login Successfully!");
+      navigate(`/profile/${data.user.username}`);
     } catch (error) {
-      toast.error(error.message || "Failed To Login. Please Try Again");
+      const errorMessage = error.response?.data?.detail || 
+                          error.message || 
+                          "Failed To Login. Please Try Again";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,9 +115,14 @@ const Login = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition"
+                  className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition flex justify-center items-center"
+                  disabled={loading}
                 >
-                  Login
+                  {loading ? (
+                    <>
+                      Loading...
+                    </>
+                  ) : "Login"}
                 </button>
               </div>
 
