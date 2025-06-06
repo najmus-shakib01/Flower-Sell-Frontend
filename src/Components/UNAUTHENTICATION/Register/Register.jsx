@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { baseUrl } from "../../../constants/env.constants";
+import { emailValidation } from "../../../constants/env.constants";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,10 +20,8 @@ const Register = () => {
     }
   };
 
-  // Email validation function
   const validateEmail = async (email) => {
-    const accessKey = "00c1c8b0668ea0626e7898daa00a093c";
-    const url = `https://apilayer.net/api/check?access_key=${accessKey}&email=${email}`;
+    const url = `https://apilayer.net/api/check?access_key=${emailValidation}&email=${email}`;
 
     try {
       const response = await axios.get(url);
@@ -57,7 +56,6 @@ const Register = () => {
       return;
     }
 
-    // First validate the email directly without useQuery
     try {
       const emailValidation = await validateEmail(email);
 
@@ -78,7 +76,6 @@ const Register = () => {
     }
 
     try {
-      // Upload image to Cloudinary
       const imgData = new FormData();
       imgData.append("file", profile_img);
       imgData.append("upload_preset", "first_time_using_cloudinary");
@@ -111,7 +108,6 @@ const Register = () => {
 
       const profileImageUrl = imgResult.secure_url;
 
-      // Send data to backend
       const response = await axios.post(`${baseUrl}/user/register/`, {
         username,
         email,
