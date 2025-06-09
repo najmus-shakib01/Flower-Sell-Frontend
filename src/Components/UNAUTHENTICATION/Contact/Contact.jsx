@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
-import { baseUrl } from "../../../constants/env.constants";
+import { baseUrl, emailValidation } from "../../../constants/env.constants";
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -20,11 +20,32 @@ const ContactForm = () => {
     }));
   };
 
+  const validateEmail = async (email) => {
+    try {
+      const response = await fetch(
+        `https://apilayer.net/api/check?access_key=${emailValidation}&email=${email}`
+      );
+      const data = await response.json();
+
+      if (!data.format_valid || !data.smtp_check || data.disposable) {
+        throw new Error("Please provide a valid and active email address");
+      }
+      return true;
+    } catch (error) {
+      console.error("Email validation error:", error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // First validate the email
+      await validateEmail(formData.email);
+
+      // If email is valid, proceed with form submission
       const response = await fetch(`${baseUrl}/flower/contact/`, {
         method: "POST",
         headers: {
@@ -36,19 +57,22 @@ const ContactForm = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to send message!");
+        throw new Error(data.error || "Failed to send message!");
       }
 
-      toast.success("✅ Message Sent Successfully!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      toast.success(
+        "✅ Message Sent Successfully! Check your email for confirmation",
+        {
+          duration: 5000,
+          position: "top-right",
+        }
+      );
 
       setFormData({ name: "", email: "", message: "" });
     } catch (error) {
       console.error("Error:", error);
       toast.error(`❌ ${error.message}`, {
-        duration: 3000,
+        duration: 4000,
         position: "top-right",
       });
     } finally {
@@ -63,11 +87,7 @@ const ContactForm = () => {
       </Helmet>
       <div className="w-full md:w-1/2">
         <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
-          <img
-            className="w-full"
-            src="/contact.png"
-            alt="Contact Image"
-          />
+          <img className="w-full" src="/contact.png" alt="Contact Image" />
         </div>
       </div>
 
