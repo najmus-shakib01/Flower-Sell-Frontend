@@ -42,10 +42,7 @@ const ContactForm = () => {
     setLoading(true);
 
     try {
-      // First validate the email
       await validateEmail(formData.email);
-
-      // If email is valid, proceed with form submission
       const response = await fetch(`${baseUrl}/flower/contact/`, {
         method: "POST",
         headers: {
