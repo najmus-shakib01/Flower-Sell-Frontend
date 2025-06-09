@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
 import { baseUrl, emailValidation } from "../../../constants/env.constants";
 
-const Contact = () => {
+const ContactForm = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -11,6 +11,7 @@ const Contact = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [emailValidating, setEmailValidating] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,34 +23,47 @@ const Contact = () => {
 
   const validateEmail = async (email) => {
     try {
+      setEmailValidating(true);
       const response = await fetch(
         `https://apilayer.net/api/check?access_key=${emailValidation}&email=${email}`
       );
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error("Email validation service failed");
+        throw new Error("Email validation service error");
       }
 
-      const data = await response.json();
-      console.log("Email Validation Data:", data);
-
-      if (!data.format_valid || !data.smtp_check || data.disposable) {
-        throw new Error("দয়া করে একটি সঠিক ও সক্রিয় ইমেইল ঠিকানা প্রদান করুন");
+      if (!data.format_valid || !data.mx_found || data.smtp_check === false) {
+        return false;
       }
-
       return true;
     } catch (error) {
       console.error("Email validation error:", error);
-      throw error;
+      return false;
+    } finally {
+      setEmailValidating(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("❌ Please fill all fields!", {
+        duration: 3000,
+        position: "top-right",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await validateEmail(formData.email);
+      const isEmailValid = await validateEmail(formData.email);
+
+      if (!isEmailValid) {
+        throw new Error("Please provide a valid email address");
+      }
 
       const response = await fetch(`${baseUrl}/flower/contact/`, {
         method: "POST",
@@ -59,13 +73,14 @@ const Contact = () => {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "বার্তা পাঠাতে ব্যর্থ হয়েছে!");
+        throw new Error(data.message || "Failed to send message!");
       }
 
-      toast.success("✅ আপনার বার্তা সফলভাবে পাঠানো হয়েছে! ইমেইল চেক করুন", {
-        duration: 5000,
+      toast.success("✅ Message Sent Successfully!", {
+        duration: 3000,
         position: "top-right",
       });
 
@@ -73,7 +88,7 @@ const Contact = () => {
     } catch (error) {
       console.error("Error:", error);
       toast.error(`❌ ${error.message}`, {
-        duration: 4000,
+        duration: 3000,
         position: "top-right",
       });
     } finally {
@@ -88,47 +103,47 @@ const Contact = () => {
       </Helmet>
       <div className="w-full md:w-1/2">
         <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
-          <img className="w-full" src="/contact.png" alt="Contact" />
+          <img className="w-full" src="/contact.png" alt="Contact Image" />
         </div>
       </div>
 
       <div className="w-full md:w-1/2 bg-white shadow-lg rounded-2xl p-6">
-        <h3 className="text-center text-2xl font-bold mb-4">যোগাযোগ করুন</h3>
+        <h3 className="text-center text-2xl font-bold mb-4">Contact Me</h3>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-gray-700 font-bold">আপনার নাম</label>
+            <label className="block text-gray-700 font-bold">Your Name</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200"
-              placeholder="আপনার নাম লিখুন"
+              placeholder="Please Enter Your Name"
               required
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-bold">ইমেইল</label>
+            <label className="block text-gray-700 font-bold">Email</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200"
-              placeholder="আপনার ইমেইল লিখুন"
+              placeholder="Please Enter Your Email"
               required
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-bold">বার্তা</label>
+            <label className="block text-gray-700 font-bold">Message</label>
             <textarea
               name="message"
               value={formData.message}
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-200"
               rows="4"
-              placeholder="আপনার বার্তা লিখুন"
+              placeholder="Please Enter Message Here"
               required
             />
           </div>
@@ -136,16 +151,20 @@ const Contact = () => {
             <button
               type="submit"
               className="w-1/2 bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition"
-              disabled={loading}
+              disabled={loading || emailValidating}
             >
-              {loading ? "পাঠানো হচ্ছে..." : "পাঠান"}
+              {loading
+                ? "Sending..."
+                : emailValidating
+                ? "Validating Email..."
+                : "Submit"}
             </button>
             <button
-              type="reset"
+              type="button"
               onClick={() => setFormData({ name: "", email: "", message: "" })}
               className="w-1/2 bg-gray-300 text-black py-2 rounded-lg font-bold hover:bg-gray-400 transition"
             >
-              রিসেট
+              Reset
             </button>
           </div>
         </form>
@@ -154,4 +173,4 @@ const Contact = () => {
   );
 };
 
-export default Contact;
+export default ContactForm;
