@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
 import { baseUrl, emailValidation } from "../../../constants/env.constants";
 
-const ContactForm = () => {
+const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -150,4 +150,4 @@ const ContactForm = () => {
   );
 };
 
-export default ContactForm;
+export default Contact;
