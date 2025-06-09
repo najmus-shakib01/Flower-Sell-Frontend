@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
-import { baseUrl } from "../../../constants/env.constants";
-import { emailValidation } from "../../../constants/env.constants";
+import { baseUrl, emailValidation } from "../../../constants/env.constants";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
