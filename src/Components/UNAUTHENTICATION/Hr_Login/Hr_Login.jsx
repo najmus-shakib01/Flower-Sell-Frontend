@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { baseUrl, hrLoginPassword } from "../../../constants/env.constants";
+import { baseUrl } from "../../../constants/env.constants";
+import { hrLoginPassword } from "../../../constants/env.constants";
 
 const Hr_Login = () => {
   const [showPassword] = useState(false);
