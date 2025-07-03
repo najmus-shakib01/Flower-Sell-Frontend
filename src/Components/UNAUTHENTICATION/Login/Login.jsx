@@ -28,7 +28,7 @@ const Login = () => {
     try {
       const response = await axios.post(`${baseUrl}/user/login/`, formData);
       const data = response.data;
-      
+
       if (data.user && data.user.id) {
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("userId", data.user.id);
@@ -41,9 +41,10 @@ const Login = () => {
       toast.success("Login Successfully!");
       navigate(`/profile/${data.user.username}`);
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || 
-                          error.message || 
-                          "Failed To Login. Please Try Again";
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.message ||
+        "Failed To Login. Please Try Again";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -118,11 +119,7 @@ const Login = () => {
                   className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition flex justify-center items-center"
                   disabled={loading}
                 >
-                  {loading ? (
-                    <>
-                      Loading...
-                    </>
-                  ) : "Login"}
+                  {loading ? <>Loading...</> : "Login"}
                 </button>
               </div>
 
@@ -141,6 +138,13 @@ const Login = () => {
                     <b>Sign Up For Smart City</b>
                   </Link>
                 </p>
+                <br />
+                <Link
+                  className="w-1/2 bg-blue-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-blue-700 transition"
+                  to={"/hr_login"}
+                >
+                  HR LOGIN
+                </Link>
               </div>
             </form>
           </div>
