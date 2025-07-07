@@ -135,7 +135,7 @@ const Login = () => {
                     &nbsp;&nbsp;·&nbsp;&nbsp;
                   </span>
                   <Link to={"/register"} className="text-blue-500 underline">
-                    <b>Sign Up For Smart City</b>
+                    <b>Sign Up For Flower Seal</b>
                   </Link>
                 </p>
                 <br />
