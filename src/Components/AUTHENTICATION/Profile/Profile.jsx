@@ -86,94 +86,139 @@ const Profile = () => {
   };
 
   return (
-    <section>
-      <div className="pt-24">
-        <Helmet>
-          <title>Profile</title>
-        </Helmet>
-        {isLoading ? (
+    <section className="pt-28 mb-12">
+      <Helmet>
+        <title>Profile</title>
+      </Helmet>
+
+      {isLoading ? (
+        <div>
           <Loader />
-        ) : (
-          <div>
-            <h1 className="text-3xl font-bold text-center">
-              Welcome {profile.username}
+        </div>
+      ) : (
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Welcome back,{" "}
+              <span className="text-indigo-600">{profile.username}</span>
             </h1>
-            <div className="flex justify-center items-center mt-6 p-6">
-              <div className="w-full max-w-lg bg-white shadow-lg rounded-2xl p-6">
-                <form
-                  encType="multipart/form-data"
-                  className="space-y-4"
-                  onSubmit={handleSubmit}
-                >
-                  <div className="flex flex-col items-center">
-                    <img
-                      key={profile.profile_img}
-                      src={`${profile.profile_img}?t=${new Date().getTime()}`}
-                      alt="Profile"
-                      className="w-60 h-60 object-cover rounded-full mx-auto"
-                    />
-                  </div>
-                  <div>
-                    <label className="label font-semibold">Username</label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full bg-gray-300"
-                      name="username"
-                      value={profile.username}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+            <p className="mt-3 text-xl text-gray-500">
+              Manage your profile information
+            </p>
+          </div>
+
+          <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+            <div className="md:flex">
+              <div className="md:w-1/3 bg-gradient-to-br from-indigo-500 to-purple-600 p-8 flex flex-col items-center justify-center">
+                <div className="relative group">
+                  <img
+                    key={profile.profile_img}
+                    src={`${profile.profile_img}?t=${new Date().getTime()}`}
+                    alt="Profile"
+                    className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-white shadow-lg object-cover mx-auto"
+                  />
+                </div>
+                <h2 className="mt-4 text-xl font-bold text-white">
+                  {profile.first_name} {profile.last_name}
+                </h2>
+                <p className="text-indigo-100">{profile.email}</p>
+              </div>
+
+              <div className="md:w-2/3 p-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="label font-semibold">First Name</label>
+                      <label
+                        htmlFor="username"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Username
+                      </label>
                       <input
                         type="text"
-                        className="input input-bordered w-full bg-gray-300"
+                        id="username"
+                        name="username"
+                        value={profile.username}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={profile.email}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label
+                        htmlFor="first_name"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        id="first_name"
                         name="first_name"
                         value={profile.first_name}
                         onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                         required
                       />
                     </div>
                     <div>
-                      <label className="label font-semibold">Last Name</label>
+                      <label
+                        htmlFor="last_name"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Last Name
+                      </label>
                       <input
                         type="text"
-                        className="input input-bordered w-full bg-gray-300"
+                        id="last_name"
                         name="last_name"
                         value={profile.last_name}
                         onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                         required
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="label font-semibold">Email</label>
-                    <input
-                      type="email"
-                      className="input input-bordered w-full bg-gray-300"
-                      name="email"
-                      value={profile.email}
-                      onChange={handleChange}
-                      required
-                    />
+
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={updateProfileMutation.isLoading}
+                      className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                        updateProfileMutation.isLoading
+                          ? "opacity-70 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      Update Profile
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    className="btn btn-primary w-full"
-                    disabled={updateProfileMutation.isLoading}
-                  >
-                    {updateProfileMutation.isLoading
-                      ? "Updating..."
-                      : "Update Profile"}
-                  </button>
                 </form>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 };

@@ -122,7 +122,7 @@ const Hr_Login = () => {
                   type="submit"
                   className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-md font-bold"
                 >
-                Login
+                  Login
                 </button>
               </div>
             </form>

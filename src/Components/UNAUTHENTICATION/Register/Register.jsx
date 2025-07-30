@@ -157,14 +157,14 @@ const Register = () => {
             />
           </div>
           <div className="w-full md:w-1/2 p-6 bg-white rounded-xl shadow-lg">
-            <Link
+            {/* <Link
               className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition"
               to={"/hr_login"}
             >
               HR LOGIN
             </Link>
             <br />
-            <br />
+            <br /> */}
             <form onSubmit={handleRegister} className="space-y-4">
               <input
                 type="text"

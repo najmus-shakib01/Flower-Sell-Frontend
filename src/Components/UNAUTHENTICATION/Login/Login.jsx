@@ -138,15 +138,15 @@ const Login = () => {
                     <b>Sign Up For Flower Seal</b>
                   </Link>
                 </p>
-                <br />
+                {/* <br />
                 <Link
                   className="w-1/2 bg-blue-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-blue-700 transition"
                   to={"/hr_login"}
                 >
                   HR LOGIN
-                </Link>
+                </Link> */}
               </div>
-            </form>
+            </form> 
           </div>
         </div>
       </section>

@@ -63,11 +63,7 @@ const ContactForm = () => {
       </Helmet>
       <div className="w-full md:w-1/2">
         <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
-          <img
-            className="w-full"
-            src="/contact.png"
-            alt="Contact Image"
-          />
+          <img className="w-full" src="/contact.png" alt="Contact Image" />
         </div>
       </div>
 

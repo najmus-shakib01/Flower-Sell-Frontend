@@ -363,10 +363,8 @@ const Auth_Home = () => {
                       <p>
                         <b>Symptoms : </b> {tip.symptoms}
                       </p>
-                        <b>Revival Steps : </b> 
-                      <p>
-                        {tip.revival_steps}
-                      </p>
+                      <b>Revival Steps : </b>
+                      <p>{tip.revival_steps}</p>
                       <p>
                         <b>Recommended Fertilizer : </b>{" "}
                         {tip.recommended_fertilizer}

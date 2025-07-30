@@ -4,10 +4,10 @@ import { Trash } from "lucide-react";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
+import { Link } from "react-router-dom";
 import Loader from "../../../ConstData/Loader";
 import Time from "../../../ConstData/Time";
 import { baseUrl } from "../../../constants/env.constants";
-import { Link } from "react-router-dom";
 
 const Cart = () => {
   const token = localStorage.getItem("auth_token");
@@ -16,58 +16,58 @@ const Cart = () => {
   const [deleteItemId, setDeleteItemId] = useState(null);
 
   const fetchCartItems = async () => {
-    const response = await axios.get(`${baseUrl}/flower/cart/`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `token ${token}`,
-      },
-    });
-    return response.data;
+    try {
+      const response = await axios.get(`${baseUrl}/flower/cart/`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `token ${token}`,
+        },
+      });
+      return response.data?.data || response.data || [];
+    } catch (error) {
+      throw new Error("Failed to fetch cart items", error);
+    }
   };
 
   const {
-    data: cartItems,
+    data: cartItems = [],
     isLoading,
     isError,
   } = useQuery({
     queryKey: ["cart"],
     queryFn: fetchCartItems,
     enabled: !!token,
-    onError: () => {
-      toast.error("Failed to load cart!");
-    },
-    onSuccess: (data) => {
-      if (!Array.isArray(data) && !Array.isArray(data?.data)) {
-        console.error("Unexpected API response:", data);
-        toast.error("Failed to load cart!");
-      }
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
   const removeFromCartMutation = useMutation({
     mutationFn: async (id) => {
-      const response = await axios.delete(
-        `${baseUrl}/flower/cart_remove/${id}/`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `token ${token}`,
-          },
-        }
-      );
-      return response.data;
+      try {
+        const response = await axios.delete(
+          `${baseUrl}/flower/cart_remove/${id}/`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `token ${token}`,
+            },
+          }
+        );
+        return response.data;
+      } catch (error) {
+        throw new Error("Failed to remove item", error);
+      }
     },
     onSuccess: () => {
-      toast.success("Removed from cart!");
+      toast.success("Item removed from cart!");
       queryClient.invalidateQueries(["cart"]);
     },
     onError: (error) => {
-      console.error("Error removing from cart:", error);
-      toast.error("Failed to remove!");
+      toast.error(error.message);
     },
   });
 
-  // Handle confirm delete
   const handleConfirmDelete = (id) => {
     setDeleteItemId(id);
     document.getElementById("confirmDeleteModal").showModal();
@@ -75,151 +75,249 @@ const Cart = () => {
 
   const handleRemoveFromCart = async () => {
     if (!deleteItemId) return;
-    removeFromCartMutation.mutate(deleteItemId);
-    document.getElementById("confirmDeleteModal").close();
+    try {
+      await removeFromCartMutation.mutateAsync(deleteItemId);
+    } finally {
+      document.getElementById("confirmDeleteModal").close();
+    }
   };
 
   const toggleDescription = (id) => {
-    setShowFullDescription((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id],
+    setShowFullDescription((prev) => ({
+      ...prev,
+      [id]: !prev[id],
     }));
   };
 
   if (!token) {
-    toast.error("You need to log in first!");
+    toast.error("Please login to view your cart");
     return null;
   }
 
   if (isLoading) {
     return <Loader />;
   }
-  
+
   if (isError) {
-    return <p className="text-center text-red-500">Error loading cart data.</p>;
+    return (
+      <div className="max-w-screen-xl mx-auto px-6 py-3 container pt-28">
+        <div className="bg-white shadow-xl rounded-xl p-6 text-center">
+          <p className="text-red-500 text-lg">Failed to load cart items</p>
+          <button
+            onClick={() => queryClient.refetchQueries(["cart"])}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
-  
-  const items = Array.isArray(cartItems) ? cartItems : cartItems?.data || [];
-  
+
+  const totalPrice = cartItems.reduce(
+    (total, item) => total + Number(item.flower_price || 0),
+    0
+  );
+
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-3 container pt-28">
+    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 container pt-28">
       <Helmet>
-        <title>Cart</title>
+        <title>Your Cart - Flower Shop</title>
       </Helmet>
-      <div className="bg-white h-auto shadow-xl rounded-xl p-6">
-        <h2 className="text-center text-3xl font-bold text-gray-800 mb-5">
-          Cart Items
+
+      <div className="bg-white shadow-xl rounded-xl p-4 sm:p-6 ">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 text-center">
+          Your Shopping Cart
         </h2>
 
-        <p className="text-center text-lg font-semibold mb-5 text-gray-600">
-          Total Items : {items.length} {" || "}
-          Total Price : <b>৳</b>
-          {items
-            .reduce((total, item) => total + Number(item.flower_price || 0), 0)
-            .toFixed(2)}
-        </p>
-
-        {items.length === 0 ? (
-          <p className="text-center text-lg text-gray-600 mt-5">
-            No items in the cart.
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+          <p className="text-lg font-semibold text-gray-700">
+            Total Items:{" "}
+            <span className="text-blue-600">{cartItems.length}</span>
           </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="table-auto w-full border border-gray-300 rounded-lg text-sm sm:text-base">
-              <thead className="bg-gray-200 text-gray-700">
-                <tr>
-                  <th className="px-2 py-2 whitespace-nowrap">Sl.</th>
-                  <th className="px-2 py-2 whitespace-nowrap">Flower</th>
-                  <th className="px-2 py-2 whitespace-nowrap">Title</th>
-                  <th className="px-2 py-2 whitespace-nowrap">Price</th>
-                  <th className="px-2 py-2 whitespace-nowrap">Description</th>
-                  <th className="px-2 py-2 whitespace-nowrap">Stock</th>
-                  <th className="px-2 py-2 whitespace-nowrap">Category</th>
-                  <th className="px-2 py-2 whitespace-nowrap">Cart Add Time</th>
-                  <th className="px-2 py-2 whitespace-nowrap">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item, index) => (
-                  console.log(item),
-                  <tr key={item.id} className="border-t">
-                    <td className="px-2 py-3">{index + 1}</td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      <img
-                        src={item.flower_image}
-                        alt={item.title}
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-md object-cover"
-                      />
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap text-blue-600">
-                      <Link to={`/flower_details/?flower_id=${item.flower_id}`}>
+          <p className="text-lg font-semibold text-gray-700">
+            Total Price:{" "}
+            <span className="text-green-600">৳{totalPrice.toFixed(2)}</span>
+          </p>
+        </div>
+
+        {cartItems.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-gray-600 text-lg mb-4">Your cart is empty</p>
+            <Link
+              to="/flowers"
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Browse Flowers
+            </Link>
+          </div>
+        )}
+
+        {cartItems.length > 0 && (
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 text-left">
+                    <th className="p-3">Product</th>
+                    <th className="p-3">Price</th>
+                    <th className="p-3">Stock</th>
+                    <th className="p-3">Added</th>
+                    <th className="p-3">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cartItems.map((item) => (
+                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                      <td className="p-3">
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={item.flower_image}
+                            alt={item.flower_name}
+                            className="w-16 h-16 rounded-md object-cover"
+                          />
+                          <div>
+                            <Link
+                              to={`/flower_details/?flower_id=${item.flower_id}`}
+                              className="font-medium text-blue-600 hover:underline"
+                            >
+                              {item.flower_name}
+                            </Link>
+                            <p className="text-gray-600 text-sm mt-1">
+                              {showFullDescription[item.id]
+                                ? item.flower_description
+                                : `${item.flower_description.substring(
+                                    0,
+                                    50
+                                  )}...`}
+                              <button
+                                onClick={() => toggleDescription(item.id)}
+                                className="text-blue-500 text-sm ml-1 hover:underline"
+                              >
+                                {showFullDescription[item.id] ? "Less" : "More"}
+                              </button>
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3">৳{item.flower_price}</td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            item.flower_stock > 0
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.flower_stock > 0
+                            ? `${item.flower_stock} available`
+                            : "Out of stock"}
+                        </span>
+                      </td>
+                      <td className="p-3 text-sm text-gray-500">
+                        {Time(item.added_at)}
+                      </td>
+                      <td className="p-3">
+                        <button
+                          onClick={() => handleConfirmDelete(item.id)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <Trash className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden space-y-4">
+              {cartItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex gap-4">
+                    <img
+                      src={item.flower_image}
+                      alt={item.flower_name}
+                      className="w-20 h-20 rounded-md object-cover"
+                    />
+                    <div className="flex-1">
+                      <Link
+                        to={`/flower_details/?flower_id=${item.flower_id}`}
+                        className="font-medium text-blue-600 hover:underline"
+                      >
                         {item.flower_name}
                       </Link>
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      <strong>৳</strong>
-                      {item.flower_price}
-                    </td>
-                    <td className="px-2 py-3">
-                      <div className="max-w-xs">
+                      <p className="text-gray-800 font-semibold mt-1">
+                        ৳{item.flower_price}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
                         {showFullDescription[item.id]
                           ? item.flower_description
-                          : `${item.flower_description.slice(0, 20)}...`}
+                          : `${item.flower_description.substring(0, 50)}...`}
                         <button
                           onClick={() => toggleDescription(item.id)}
-                          className="text-blue-400 underline ml-1"
+                          className="text-blue-500 text-sm ml-1 hover:underline"
                         >
-                          {showFullDescription[item.id]
-                            ? " See Less"
-                            : " See All"}
+                          {showFullDescription[item.id] ? "Less" : "More"}
                         </button>
-                      </div>
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      {item.flower_stock}
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      {item.flower_category}
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      {Time(item.added_at)}
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleConfirmDelete(item.id);
-                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center mt-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        item.flower_stock > 0
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {item.flower_stock > 0
+                        ? `${item.flower_stock} available`
+                        : "Out of stock"}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">
+                        {Time(item.added_at)}
+                      </span>
+                      <button
+                        onClick={() => handleConfirmDelete(item.id)}
+                        className="text-red-600 hover:text-red-800 transition-colors"
                       >
-                        <Trash className="w-5 h-5 text-red-700" />
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        <Trash className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       <dialog id="confirmDeleteModal" className="modal">
-        <div className="modal-box bg-white">
-          <h3 className="font-bold text-lg">Are you sure?</h3>
+        <div className="modal-box bg-white max-w-md">
+          <h3 className="font-bold text-lg">Confirm Removal</h3>
           <p className="py-4">
-            Do you really want to remove this item from the cart?
+            Are you sure you want to remove this item from your cart?
           </p>
-          <div className="modal-action">
-            <button onClick={handleRemoveFromCart} className="btn btn-error">
-              Yes, Remove
-            </button>
+          <div className="modal-action flex justify-end gap-3">
             <button
               onClick={() =>
                 document.getElementById("confirmDeleteModal").close()
               }
-              className="btn"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
             >
               Cancel
+            </button>
+            <button
+              onClick={handleRemoveFromCart}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              disabled={removeFromCartMutation.isLoading}
+            >
+              {removeFromCartMutation.isLoading ? "Removing..." : "Remove"}
             </button>
           </div>
         </div>

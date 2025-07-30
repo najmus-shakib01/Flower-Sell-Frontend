@@ -62,7 +62,6 @@ const Reset_Password = () => {
       </Helmet>
       <section>
         <div className="container max-w-screen-xl mx-auto px-6 py-3 flex flex-col md:flex-row items-center justify-between pt-28 gap-10">
-          {/* Image Column */}
           <div className="w-full md:w-1/2 md:order-none">
             <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
               <img
@@ -73,20 +72,17 @@ const Reset_Password = () => {
             </div>
           </div>
 
-          {/* Password Reset Form */}
           <div className="w-full md:w-1/2 bg-white shadow-lg rounded-2xl p-6">
             <h3 className="text-center text-2xl font-bold mb-6 text-gray-800">
               Reset Password
             </h3>
 
-            {/* Success Message */}
             {message && (
               <div className="alert alert-success shadow-lg mb-4">
                 {message}
               </div>
             )}
 
-            {/* Error Message */}
             {error && (
               <div className="alert alert-error shadow-lg mb-4">{error}</div>
             )}
@@ -126,7 +122,6 @@ const Reset_Password = () => {
                 </span>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 rounded-lg font-bold hover:from-blue-600 hover:to-indigo-700 transition duration-300"
