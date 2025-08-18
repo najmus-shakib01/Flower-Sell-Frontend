@@ -1,8 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { Helmet } from "react-helmet-async";
 import { baseUrl } from "../../../constants/env.constants";
 import Loader from "../../../ConstData/Loader";
-import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 
 const User = () => {
   const token = localStorage.getItem("auth_token");
@@ -59,7 +59,7 @@ const User = () => {
         <title>User Management | Admin Dashboard</title>
       </Helmet>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="mt-2 text-sm text-gray-600">
