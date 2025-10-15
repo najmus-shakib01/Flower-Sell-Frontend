@@ -3,8 +3,7 @@ import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { baseUrl } from "../../../constants/env.constants";
-import { emailValidation } from "../../../constants/env.constants";
+import { baseUrl, emailValidation } from "../../../constants/env.constants";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -119,7 +118,10 @@ const Register = () => {
       });
 
       if (response.status === 200 || response.status === 201) {
-        toast.success("Registration Successful! Redirecting to Login...");
+        localStorage.setItem('pendingVerificationEmail', email);
+        localStorage.setItem('registrationTime', new Date().toISOString());
+        
+        toast.success("Registration Successful! Check your email for OTP and redirecting to OTP Verification...");
         navigate("/otp");
       } else {
         toast.error(
@@ -157,14 +159,6 @@ const Register = () => {
             />
           </div>
           <div className="w-full md:w-1/2 p-6 bg-white rounded-xl shadow-lg">
-            {/* <Link
-              className="w-1/2 bg-green-600 text-white py-3 px-5 rounded-lg font-bold hover:bg-green-700 transition"
-              to={"/hr_login"}
-            >
-              HR LOGIN
-            </Link>
-            <br />
-            <br /> */}
             <form onSubmit={handleRegister} className="space-y-4">
               <input
                 type="text"
