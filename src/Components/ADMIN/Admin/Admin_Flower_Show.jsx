@@ -48,7 +48,12 @@ const Admin_Flower_Show = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (postId) => {
-      await axios.delete(`${baseUrl}/flower/flower_detail/${postId}/`);
+      const token = localStorage.getItem("auth_token");
+      await axios.delete(`${baseUrl}/flower/flower_detail/${postId}/`, {
+        headers: {
+          Authorization: `token ${token}`,
+        },
+      });
     },
     onSuccess: () => {
       toast.success("Flower deleted successfully!");
@@ -94,9 +99,15 @@ const Admin_Flower_Show = () => {
         image: imageUrl,
       };
 
+      const token = localStorage.getItem("auth_token");
       const { data } = await axios.put(
         `${baseUrl}/flower/flower_detail/${updatedPost.id}/`,
-        postData
+        postData,
+        {
+          headers: {
+            Authorization: `token ${token}`,
+          },
+        }
       );
       return data;
     },

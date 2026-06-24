@@ -4,10 +4,14 @@ import { toast } from "react-hot-toast";
 import { baseUrl } from "../../../constants/env.constants";
 
 // eslint-disable-next-line react/prop-types
-const PaymentSection = ({ flowerId, canComment }) => {
+const PaymentSection = ({ flowerId, canComment, orderStatus }) => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const handlePayment = async () => {
+    if (orderStatus === 'Completed') {
+      toast.success("✅ Payment is already completed!");
+      return;
+    }
     if (!canComment) {
       toast.error("❌ You must order this flower before making a payment!");
       return;
@@ -28,9 +32,9 @@ const PaymentSection = ({ flowerId, canComment }) => {
 
       window.location.href = paymentData.redirect_url;
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "🚨 Network error. Please try again."
-      );
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || "🚨 Network error. Please try again.";
+      toast.error(errorMsg);
+      console.error("Payment error details:", error.response?.data);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -41,8 +45,12 @@ const PaymentSection = ({ flowerId, canComment }) => {
   return (
     <button
       onClick={handlePayment}
-      disabled={!canComment || isProcessingPayment}
-      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:bg-green-400"
+      disabled={!canComment || orderStatus === 'Completed' || isProcessingPayment}
+      className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg transition-colors ${
+        orderStatus === 'Completed'
+          ? "bg-green-700 cursor-not-allowed"
+          : "bg-green-600 hover:bg-green-700 disabled:bg-green-400"
+      }`}
     >
       {isProcessingPayment ? (
         <>
@@ -68,6 +76,8 @@ const PaymentSection = ({ flowerId, canComment }) => {
           </svg>
           Processing...
         </>
+      ) : orderStatus === 'Completed' ? (
+        "Payment Completed"
       ) : (
         "Make Payment"
       )}

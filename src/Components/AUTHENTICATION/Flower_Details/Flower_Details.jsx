@@ -48,14 +48,17 @@ const Flower_Details = () => {
         },
       }
     );
-    return data.can_comment;
+    return data;
   };
 
-  const { data: canComment } = useQuery({
-    queryKey: ["canComment", id],
+  const { data: orderCheckData } = useQuery({
+    queryKey: ["orderCheck", id],
     queryFn: checkOrderStatus,
     enabled: !!id && !!loggedInUser,
   });
+
+  const canComment = orderCheckData?.can_comment;
+  const orderStatus = orderCheckData?.order_status;
 
   if (flowerLoading) return <Loader />;
   if (flowerError)
@@ -134,9 +137,9 @@ const Flower_Details = () => {
                   Back
                 </button>
 
-                <OrderSection flower={flower} />
+                <OrderSection flower={flower} orderStatus={orderStatus} />
 
-                <PaymentSection flowerId={id} canComment={canComment} />
+                <PaymentSection flowerId={id} canComment={canComment} orderStatus={orderStatus} />
 
                 <button
                   onClick={() =>

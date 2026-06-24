@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { baseUrl } from "../../../constants/env.constants";
 
 
-const OrderSection = ({ flower }) => {
+const OrderSection = ({ flower, orderStatus }) => {
   const [quantity, setQuantity] = useState(1);
   const navigate = useNavigate();
 
@@ -51,8 +51,12 @@ const OrderSection = ({ flower }) => {
     <>
       <button
         onClick={() => document.getElementById("orderModal").showModal()}
-        disabled={createOrderMutation.isPending}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:bg-indigo-400"
+        disabled={createOrderMutation.isPending || !!orderStatus}
+        className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg transition-colors ${
+          orderStatus
+            ? "bg-indigo-800 cursor-not-allowed"
+            : "bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400"
+        }`}
       >
         {createOrderMutation.isPending ? (
           <>
@@ -78,6 +82,10 @@ const OrderSection = ({ flower }) => {
             </svg>
             Ordering...
           </>
+        ) : orderStatus === 'Pending' ? (
+          "Already Ordered"
+        ) : orderStatus === 'Completed' ? (
+          "Purchased"
         ) : (
           "Order Now"
         )}

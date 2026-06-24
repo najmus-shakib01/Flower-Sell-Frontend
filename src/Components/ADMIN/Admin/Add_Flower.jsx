@@ -25,7 +25,14 @@ const Add_Flower = () => {
     setLoading(true);
 
     const formData = new FormData(e.target);
-    const imageFile = formData.get("imageInput");
+    const imageInput = document.getElementById("imageInput");
+    const imageFile = imageInput ? imageInput.files[0] : null;
+
+    if (!imageFile) {
+      toast.error("Please select an image first.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const cloudinaryData = new FormData();
@@ -56,10 +63,12 @@ const Add_Flower = () => {
         image: imageUrl,
       };
 
+      const token = localStorage.getItem("auth_token");
       const response = await fetch(`${baseUrl}/flower/flower_all/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `token ${token}`,
         },
         body: JSON.stringify(flowerData),
       });
