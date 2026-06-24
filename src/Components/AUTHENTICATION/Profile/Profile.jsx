@@ -14,8 +14,14 @@ const Profile = () => {
     queryKey: ["profile", userId],
     queryFn: async () => {
       if (!userId) return null;
+      const token = localStorage.getItem("auth_token");
       const response = await axios.get(
-        `${baseUrl}/user/user_detail/${userId}/`
+        `${baseUrl}/user/user_detail/${userId}/`,
+        {
+          headers: {
+            Authorization: `token ${token}`,
+          },
+        }
       );
       return response.data;
     },

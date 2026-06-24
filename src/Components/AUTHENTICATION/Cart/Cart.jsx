@@ -4,7 +4,7 @@ import { Trash } from "lucide-react";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Loader from "../../../ConstData/Loader";
 import Time from "../../../ConstData/Time";
 import { baseUrl } from "../../../constants/env.constants";
@@ -12,8 +12,44 @@ import { baseUrl } from "../../../constants/env.constants";
 const Cart = () => {
   const token = localStorage.getItem("auth_token");
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [showFullDescription, setShowFullDescription] = useState({});
   const [deleteItemId, setDeleteItemId] = useState(null);
+  const [orderItem, setOrderItem] = useState(null);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+
+  const createOrderMutation = useMutation({
+    mutationFn: async (orderData) => {
+      const response = await axios.post(
+        `${baseUrl}/order/create_order/`,
+        {
+          flower: orderData.flowerId,
+          quantity: orderData.quantity,
+        },
+        {
+          headers: {
+            Authorization: `token ${token}`,
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: async (_, variables) => {
+      toast.success("✅ Order placed successfully! Please Check Your Email.");
+      try {
+        await removeFromCartMutation.mutateAsync(variables.cartItemId);
+      } catch (err) {
+        console.error("Failed to auto-remove from cart:", err);
+      }
+      document.getElementById("orderCartModal").close();
+      setOrderItem(null);
+      queryClient.invalidateQueries(["cart"]);
+      navigate("/order_history");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || error.response?.data?.error || "❌ Failed to place order!");
+    },
+  });
 
   const fetchCartItems = async () => {
     try {
@@ -218,12 +254,25 @@ const Cart = () => {
                         {Time(item.added_at)}
                       </td>
                       <td className="p-3">
-                        <button
-                          onClick={() => handleConfirmDelete(item.id)}
-                          className="text-red-600 hover:text-red-800 transition-colors"
-                        >
-                          <Trash className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              setOrderItem(item);
+                              setOrderQuantity(1);
+                              document.getElementById("orderCartModal").showModal();
+                            }}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold transition-colors disabled:bg-indigo-400"
+                            disabled={item.flower_stock < 1}
+                          >
+                            Order Now
+                          </button>
+                          <button
+                            onClick={() => handleConfirmDelete(item.id)}
+                            className="text-red-600 hover:text-red-800 transition-colors p-1"
+                          >
+                            <Trash className="w-5 h-5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -279,12 +328,20 @@ const Cart = () => {
                         : "Out of stock"}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">
-                        {Time(item.added_at)}
-                      </span>
+                      <button
+                        onClick={() => {
+                          setOrderItem(item);
+                          setOrderQuantity(1);
+                          document.getElementById("orderCartModal").showModal();
+                        }}
+                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold transition-colors disabled:bg-indigo-400"
+                        disabled={item.flower_stock < 1}
+                      >
+                        Order Now
+                      </button>
                       <button
                         onClick={() => handleConfirmDelete(item.id)}
-                        className="text-red-600 hover:text-red-800 transition-colors"
+                        className="text-red-600 hover:text-red-800 transition-colors p-1"
                       >
                         <Trash className="w-5 h-5" />
                       </button>
@@ -318,6 +375,81 @@ const Cart = () => {
               disabled={removeFromCartMutation.isLoading}
             >
               {removeFromCartMutation.isLoading ? "Removing..." : "Remove"}
+            </button>
+          </div>
+        </div>
+      </dialog>
+
+      <dialog id="orderCartModal" className="modal">
+        <div className="modal-box bg-white max-w-md text-black">
+          <h3 className="text-xl font-bold mb-4">Confirm Order</h3>
+          {orderItem && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 mb-4">
+                <img
+                  src={orderItem.flower_image}
+                  alt={orderItem.flower_name}
+                  className="w-16 h-16 rounded-md object-cover"
+                />
+                <div>
+                  <h4 className="font-semibold text-gray-800">{orderItem.flower_name}</h4>
+                  <span className="text-sm bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">
+                    {orderItem.flower_category}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={orderItem.flower_stock || 100}
+                  value={orderQuantity}
+                  onChange={(e) => setOrderQuantity(parseInt(e.target.value) || 1)}
+                  className="w-full px-4 py-2 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black font-semibold"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Available stock: {orderItem.flower_stock}
+                </p>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-sm text-gray-600">Unit Price:</span>
+                <span className="font-medium text-gray-800">৳{orderItem.flower_price}</span>
+              </div>
+              <div className="flex justify-between items-center border-t pt-2">
+                <span className="text-sm text-gray-600">Total:</span>
+                <span className="font-bold text-lg text-gray-800">
+                  ৳{(Number(orderItem.flower_price) * orderQuantity).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+          <div className="modal-action flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => {
+                document.getElementById("orderCartModal").close();
+                setOrderItem(null);
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-black bg-white"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (orderItem) {
+                  createOrderMutation.mutate({
+                    flowerId: orderItem.flower_id,
+                    quantity: orderQuantity,
+                    cartItemId: orderItem.id,
+                  });
+                }
+              }}
+              disabled={createOrderMutation.isPending}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg disabled:bg-indigo-400 transition-colors font-bold"
+            >
+              {createOrderMutation.isPending ? "Processing..." : "Confirm Order"}
             </button>
           </div>
         </div>

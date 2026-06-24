@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet-async";
 import { toast } from "react-hot-toast";
 import { baseUrl } from "../../../constants/env.constants";
 import Loader from "../../../ConstData/Loader";
+import { useSearchParams } from "react-router-dom";
 
 const Admin_Flower_Show = () => {
   const [editPost, setEditPost] = useState(null);
@@ -12,19 +13,38 @@ const Admin_Flower_Show = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const queryClient = useQueryClient();
 
-  const fetchPosts = async () => {
-    const { data } = await axios.get(`${baseUrl}/flower/flower_all/`);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const setCurrentPage = (newPage) => {
+    setSearchParams((prev) => {
+      const nextParams = new URLSearchParams(prev);
+      if (typeof newPage === "function") {
+        nextParams.set("page", newPage(currentPage).toString());
+      } else {
+        nextParams.set("page", newPage.toString());
+      }
+      return nextParams;
+    });
+  };
+
+  const fetchPosts = async ({ queryKey }) => {
+    const [, page] = queryKey;
+    const { data } = await axios.get(`${baseUrl}/flower/flower_all/?page=${page}`);
     return data;
   };
 
   const {
-    data: posts = [],
+    data,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["flowers"],
+    queryKey: ["flowers", currentPage],
     queryFn: fetchPosts,
   });
+
+  const posts = data?.results || [];
+  const totalCount = data?.count || 0;
+  const totalPages = Math.ceil(totalCount / 6);
 
   const deleteMutation = useMutation({
     mutationFn: async (postId) => {
@@ -43,9 +63,40 @@ const Admin_Flower_Show = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (updatedPost) => {
+      let imageUrl = updatedPost.image;
+      if (updatedPost.image instanceof File) {
+        const cloudinaryData = new FormData();
+        cloudinaryData.append("file", updatedPost.image);
+        cloudinaryData.append("upload_preset", "first_time_using_cloudinary");
+
+        const cloudinaryResponse = await fetch(
+          "https://api.cloudinary.com/v1_1/daasda9rp/image/upload",
+          {
+            method: "POST",
+            body: cloudinaryData,
+          }
+        );
+
+        if (!cloudinaryResponse.ok) {
+          throw new Error("Failed to upload image to Cloudinary");
+        }
+
+        const cloudinaryResult = await cloudinaryResponse.json();
+        imageUrl = cloudinaryResult.secure_url;
+      }
+
+      const postData = {
+        title: updatedPost.title,
+        description: updatedPost.description,
+        price: parseFloat(updatedPost.price),
+        category: updatedPost.category,
+        stock: parseInt(updatedPost.stock),
+        image: imageUrl,
+      };
+
       const { data } = await axios.put(
         `${baseUrl}/flower/flower_detail/${updatedPost.id}/`,
-        updatedPost
+        postData
       );
       return data;
     },
@@ -222,7 +273,7 @@ const Admin_Flower_Show = () => {
                 <div className="flex items-center gap-4">
                   {editPost.image && (
                     <img
-                      src={editPost.image}
+                      src={editPost.image instanceof File ? URL.createObjectURL(editPost.image) : editPost.image}
                       alt="Current flower"
                       className="w-16 h-16 rounded-md object-cover"
                     />
@@ -282,7 +333,7 @@ const Admin_Flower_Show = () => {
               All Flower Listings
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              {posts.length} flowers available
+              {totalCount} flowers available
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -386,6 +437,41 @@ const Admin_Flower_Show = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Section */}
+          {!isLoading && !error && totalPages > 1 && (
+            <div className="flex justify-center items-center py-4 border-t border-gray-200 bg-gray-50 gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-sm font-semibold rounded-md transition-colors duration-200 disabled:cursor-not-allowed"
+              >
+                ❮
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-8 h-8 text-sm font-bold rounded-md transition-colors duration-200 ${
+                    currentPage === pageNum
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-sm font-semibold rounded-md transition-colors duration-200 disabled:cursor-not-allowed"
+              >
+                ❯
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

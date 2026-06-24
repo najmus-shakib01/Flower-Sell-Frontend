@@ -4,10 +4,11 @@ import Loader from "../../../ConstData/Loader";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
-const fetchFlowers = async () => {
+const fetchFlowers = async (page = 1) => {
   try {
-    const { data } = await axios.get(`${baseUrl}/flower/flower_all/`);
+    const { data } = await axios.get(`${baseUrl}/flower/flower_all/?page=${page}`);
     console.log("Flower Data : ", data);
     return data;
   } catch (err) {
@@ -87,15 +88,33 @@ const Home = () => {
     },
   ];
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const setCurrentPage = (newPage) => {
+    setSearchParams((prev) => {
+      const nextParams = new URLSearchParams(prev);
+      if (typeof newPage === "function") {
+        nextParams.set("page", newPage(currentPage).toString());
+      } else {
+        nextParams.set("page", newPage.toString());
+      }
+      return nextParams;
+    });
+  };
+
   // Fetch Flowers using React Query
   const {
-    data: flowers,
+    data,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["flowers"],
-    queryFn: fetchFlowers,
+    queryKey: ["flowers", currentPage],
+    queryFn: () => fetchFlowers(currentPage),
   });
+
+  const flowers = data?.results || [];
+  const totalCount = data?.count || 0;
+  const totalPages = Math.ceil(totalCount / 6);
 
   return (
     <>
@@ -155,7 +174,7 @@ const Home = () => {
             {seasonal_flowers.map((seasonal_flowers) => (
               <div
                 key={seasonal_flowers.id}
-                className="card card-compact bg-base-600 shadow-xl rounded-md"
+                className="card card-compact bg-white shadow-xl rounded-md"
               >
                 <figure>
                   <img
@@ -181,7 +200,7 @@ const Home = () => {
             {floral_arrangement_ideas.map((floral_arrangement_ideas) => (
               <div
                 key={floral_arrangement_ideas.id}
-                className="card card-compact bg-base-600 shadow-xl rounded-md"
+                className="card card-compact bg-white shadow-xl rounded-md"
               >
                 <figure>
                   <img
@@ -239,6 +258,41 @@ const Home = () => {
             </div>
           )}
         </section>
+
+        {/* Pagination Section */}
+        {!isLoading && !isError && totalPages > 1 && (
+          <div className="flex justify-center items-center mt-12 mb-8 gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+            >
+              ❮
+            </button>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`w-10 h-10 font-bold rounded-lg transition-colors duration-200 ${
+                  currentPage === pageNum
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {pageNum}
+              </button>
+            ))}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+            >
+              ❯
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

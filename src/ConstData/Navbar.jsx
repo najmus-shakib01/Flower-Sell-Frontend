@@ -2,6 +2,7 @@ import { ChevronDown, Menu, ShoppingCart, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { baseUrl } from "../constants/env.constants";
 
 const Navbar = () => {
@@ -16,6 +17,23 @@ const Navbar = () => {
   const logoutModalRef = useRef(null);
   const token = localStorage.getItem("auth_token");
   const userName = localStorage.getItem("UserName");
+
+  const { data: cartItems = [] } = useQuery({
+    queryKey: ["cart"],
+    queryFn: async () => {
+      if (!token) return [];
+      const response = await fetch(`${baseUrl}/flower/cart/`, {
+        headers: {
+          Authorization: `token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) return [];
+      const data = await response.json();
+      return data?.data || data || [];
+    },
+    enabled: !!token,
+  });
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -129,10 +147,15 @@ const Navbar = () => {
       <li className="w-full">
         <Link
           to="/cart"
-          className="hover:text-primary block py-2 items-center"
+          className="hover:text-primary block py-2 items-center relative w-max"
           onClick={() => setIsOpen(false)}
         >
           <ShoppingCart className="inline mr-2" />
+          {cartItems.length > 0 && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full text-[10px] w-5 h-5 flex items-center justify-center font-extrabold shadow-sm border border-white">
+              {cartItems.length}
+            </span>
+          )}
         </Link>
       </li>
 

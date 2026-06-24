@@ -1,18 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import toast, { Toaster } from "react-hot-toast";
 import Loader from "../../../ConstData/Loader";
 import Time from "../../../ConstData/Time";
 import { baseUrl } from "../../../constants/env.constants";
+import { useSearchParams } from "react-router-dom";
 
 const OrderHistory = () => {
   const token = localStorage.getItem("auth_token");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const setCurrentPage = (newPage) => {
+    setSearchParams((prev) => {
+      const nextParams = new URLSearchParams(prev);
+      if (typeof newPage === "function") {
+        nextParams.set("page", newPage(currentPage).toString());
+      } else {
+        nextParams.set("page", newPage.toString());
+      }
+      return nextParams;
+    });
+  };
 
-  const fetchOrders = async () => {
+  const fetchOrders = async ({ queryKey }) => {
+    const [, page] = queryKey;
     try {
-      const response = await axios.get(`${baseUrl}/order/my_order/`, {
+      const response = await axios.get(`${baseUrl}/order/my_order/?page=${page}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `token ${token}`,
@@ -42,18 +57,22 @@ const OrderHistory = () => {
   };
 
   const {
-    data: orders,
+    data,
     isLoading: ordersLoading,
     isError: ordersError,
     refetch: refetchOrders,
   } = useQuery({
-    queryKey: ["orders"],
+    queryKey: ["orders", currentPage],
     queryFn: fetchOrders,
     enabled: !!token,
     onError: (error) => {
       toast.error(error.message);
     },
   });
+
+  const orders = data?.results || [];
+  const totalCount = data?.count || 0;
+  const totalPages = Math.ceil(totalCount / 10);
 
   const {
     data: stats,
@@ -96,7 +115,7 @@ const OrderHistory = () => {
       <div className="bg-white shadow-xl rounded-xl p-6">
         <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400">
           <p className="text-yellow-700">
-            <strong>Debug Info:</strong> {orders?.length} orders found
+            <strong>Debug Info:</strong> {totalCount} orders found
           </p>
         </div>
 
@@ -252,6 +271,7 @@ const OrderHistory = () => {
         </h2>
 
         {orders && orders.length > 0 ? (
+          <>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white">
               <thead className="bg-gray-100">
@@ -295,6 +315,42 @@ const OrderHistory = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Section */}
+          {!ordersLoading && !ordersError && totalPages > 1 && (
+            <div className="flex justify-center items-center mt-6 gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-sm font-semibold rounded-md transition-colors duration-200 disabled:cursor-not-allowed"
+              >
+                ❮
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-8 h-8 text-sm font-bold rounded-md transition-colors duration-200 ${
+                    currentPage === pageNum
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-sm font-semibold rounded-md transition-colors duration-200 disabled:cursor-not-allowed"
+              >
+                ❯
+              </button>
+            </div>
+          )}
+          </>
         ) : (
           <div className="text-center py-10">
             <p className="text-gray-500">No orders found</p>
